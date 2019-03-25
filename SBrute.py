@@ -33,6 +33,8 @@ class SBrute(object):
     result = p.starmap(multi, [[self.nim, d, shared] for d in DICTIONARY])
     result = list(set(result))
     result.remove(None)
+    p.close()
+    p.join()
 
     if len(result) == 1:
       print('Found {} {} time elapsed {}s'.format(self.nim, result[0], time.time()-start_time))
