@@ -3,18 +3,16 @@ import requests
 
 class SConnector(object):
   url = "http://sion.stikom-bali.ac.id/load_login.php"
-  ok_text = " "
+  ok_text = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
+  ok_len = len(ok_text)
+
   def __init__(self, nim, pin):
     self.payload = {'usern':nim, 'passw':pin}
 
   def connect(self):
-    self.connection = requests.post(self.url, data=self.payload)
-
-  def status(self):
-    return self.connection.text == self.ok_text
-
-  def content(self):
-    return self.connection.text
+    connection = requests.post(self.url, data=self.payload)
+    # self.text = connection.text
+    self.status = len(connection.text) == self.ok_len and connection.text == self.ok_text
 
 if __name__ == '__main__':
   import argparse
@@ -27,4 +25,4 @@ if __name__ == '__main__':
 
   test = SConnector(args.nim, args.pin)
   test.connect()
-  print(test.content())
+  print(test.status)
