@@ -167,7 +167,7 @@ if __name__ == '__main__':
     if args.range:
         target += [n for n in range(args.range[0], args.range[1]+1)]
     if target == []:
-        print("Target is not set, please see --help")
+        print("Target is empty, please see --help")
         exit(1)
 
     process = args.process
