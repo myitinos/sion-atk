@@ -76,6 +76,7 @@ def login(pin, depth=0):
         try:
             data = {"usern": nim, "passw": pin}
             r = requests.post(URL, data=data)
+            r.close()
             if r.text == OK_TXT:
                 SHARED.found = True
                 return pin
