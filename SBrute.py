@@ -137,7 +137,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--max-retry",
+    parser.add_argument("--retry",
                         metavar="N",
                         nargs=1,
                         default=4,
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         exit(1)
 
     process = args.process
-    MAX_RETRY = args.max-retry
+    MAX_RETRY = args.retry
 
     init()
     init_color()
