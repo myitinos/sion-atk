@@ -44,20 +44,14 @@ def init_dictionary(start_year=97, end_year=99):
                 DICTIONARY.append(str(yy).zfill(2)[-2:]
                                   + str(mm).zfill(2)
                                   + str(dd).zfill(2))
+    for n in range(1, 1000):
+        t = str(n)
+        DICTIONARY.append(t * int(6 / len(t)))
+
     # put extra values here
     DICTIONARY += [
-        "000000",
-        "111111",
-        "222222",
-        "333333",
-        "444444",
-        "555555",
-        "666666",
-        "777777",
-        "888888",
-        "999999",
         "123456",
-        "654321"
+        "654321",
     ]
     DICTIONARY = list(set(DICTIONARY))
     total_time = time.time()-start_time
