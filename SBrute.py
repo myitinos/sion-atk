@@ -71,6 +71,7 @@ def login(pin, depth=0):
     global OK_TXT
     global SHARED
     global NIM
+    global MAX_RETRY
 
     if not SHARED.found and not SHARED.exception:
         try:
@@ -81,7 +82,7 @@ def login(pin, depth=0):
                 SHARED.found = True
                 return pin
         except:
-            if depth < 8:
+            if depth < MAX_RETRY:
                 depth += 1
                 try:
                     return login(pin, depth=depth)
@@ -136,6 +137,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--max-retry",
+                        metavar="N",
+                        nargs=1,
+                        default=4,
+                        type=int,
+                        help="number of max retry if exception occured, default is 4")
     parser.add_argument("--infile",
                         metavar="PATH",
                         help="txt file containing targets to bruteforce")
@@ -154,6 +161,7 @@ if __name__ == '__main__':
                         nargs=2,
                         help="range of target NIM to bruteforce, END is included in the range")
     parser.add_argument('-p', '--process',
+                        metavar="N",
                         type=int,
                         default=multiprocessing.cpu_count(),
                         help="Specify number of process to use, default value is CPU Count * 4. It's more limiting to RAM than CPU, use with CAUTION!!!")
@@ -162,9 +170,9 @@ if __name__ == '__main__':
     target = []
     done = []
 
-    if args.list:
+    if args.infile:
         try:
-            with open(args.list, 'r') as filetarget:
+            with open(args.infile, 'r') as filetarget:
                 target += filetarget.read().split(' ')
         except:
             print("List file is not reachable")
@@ -177,6 +185,7 @@ if __name__ == '__main__':
         exit(1)
 
     process = args.process
+    MAX_RETRY = args.max-retry
 
     init()
     init_color()
