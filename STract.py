@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("nim", help="NIM to try login")
     parser.add_argument("pin", help="PIN to try login")
-    parser.add_argument("--outfile", nargs=1, metavar="FILE", default="list.txt", help="outfile target")
+    parser.add_argument("--outfile", nargs=1, metavar="FILE", default="temp.txt", help="outfile target")
     args = parser.parse_args()
 
     print("Trying to login...")
