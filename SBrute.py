@@ -156,6 +156,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     target = []
+    done = []
 
     if args.list:
         try:
@@ -180,6 +181,17 @@ if __name__ == '__main__':
     print("Starting bruteforce with {} processes for {} target(s)".format(
         process, len(target)))
 
-    for nim in target:
-        brute(nim=nim, process=process)
-        gc.collect()
+    try:
+        for nim in target:
+            brute(nim=nim, process=process)
+            done.append(nim)
+            gc.collect()
+    except KeyboardInterrupt:
+        print('\nStopped')
+    except:
+        print('\nException occured when trying to bruteforce {}'.format(NIM))
+    finally:
+        if not len(done) == len(target):
+            print('Program terminated prematurely. Writing remaining target to temp.txt')
+            with open('temp.txt', 'w') as outfile:
+                outfile.write(' '.join([str(t) for t in target if t not in done]))
