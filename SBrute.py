@@ -135,11 +135,14 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--list",
+                        metavar="PATH",
+                        help="txt file containing targets to bruteforce")
     parser.add_argument("--target",
                         metavar="TARGET",
                         type=int,
-                        help="target NIM to bruteforce ",
-                        nargs="*")
+                        help="target NIM to bruteforce",
+                        nargs="+")
     parser.add_argument("--range",
                         metavar=("START", "END"),
                         type=int,
@@ -153,12 +156,18 @@ if __name__ == '__main__':
 
     target = []
 
+    if args.list:
+        try:
+            with open(args.list, 'r') as filetarget:
+                target += filetarget.read().split()
+        except:
+            print("")
     if args.target:
-        target = args.target
-    elif args.range:
-        target = [n for n in range(args.range[0], args.range[1])]
-    else:
-        print("Target not set, please see --help")
+        target += args.target
+    if args.range:
+        target += [n for n in range(args.range[0], args.range[1]+1)]
+    if target == []:
+        print("Target is not set, please see --help")
         exit(1)
 
     process = args.process
@@ -167,7 +176,8 @@ if __name__ == '__main__':
     init_color()
     init_dictionary()
 
-    print("Starting bruteforce with {} processes for {} target(s)".format(process, len(target)))
+    print("Starting bruteforce with {} processes for {} target(s)".format(
+        process, len(target)))
 
     for nim in target:
         brute(nim=nim, process=process)
