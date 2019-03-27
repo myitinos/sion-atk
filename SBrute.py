@@ -148,7 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--outfile",
                         metavar="PATH",
                         default="temp.txt",
-                        help="txt file to write if not all target is tried")
+                        help="txt file to write if not all target is tried default is temp.txt")
     parser.add_argument("--target",
                         metavar="TARGET",
                         type=int,
