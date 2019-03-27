@@ -66,7 +66,7 @@ def init_dictionary(start_year=97, end_year=99):
           .format(len(DICTIONARY), total_time))
 
 
-def login(pin):
+def login(pin, depth=0):
     global URL
     global OK_TXT
     global SHARED
@@ -80,6 +80,12 @@ def login(pin):
                 SHARED.found = True
                 return pin
         except:
+            if depth < 8:
+                depth += 1
+                try:
+                    return login(pin, depth=depth)
+                except:
+                    pass
             SHARED.exception = True
     return
 
