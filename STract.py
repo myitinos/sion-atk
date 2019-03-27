@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("nim", help="NIM to try login")
     parser.add_argument("pin", help="PIN to try login")
+    parser.add_argument("--outfile", nargs=1, metavar="FILE", default="list.txt", help="outfile target")
     args = parser.parse_args()
 
     print("Trying to login...")
@@ -47,7 +48,7 @@ def main():
     data = [int(t) if n % 3 == 0 else 0 for (n, t) in enumerate(data)]
     data = sorted(list(set(data)))
     data.remove(0)
-    with open('list.txt', 'w') as outfile:
+    with open(args.outfile[0], 'w') as outfile:
         data = list(map(str, data))
         outfile.write(' '.join(data))
 
