@@ -74,9 +74,9 @@ def login(pin, depth=0):
 
     if not SHARED.found and not SHARED.exception:
         try:
-            data = {"usern": nim, "passw": pin}
-            r = requests.post(URL, data=data)
-            r.close()
+            with requests.Session() as s:
+                data = {"usern": nim, "passw": pin}
+                r = s.post(URL, data=data)
             if r.text == OK_TXT:
                 SHARED.found = True
                 return pin
