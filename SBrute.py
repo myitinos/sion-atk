@@ -151,8 +151,8 @@ if __name__ == '__main__':
                         help="range of target NIM to bruteforce, END is included in the range")
     parser.add_argument('-p', '--process',
                         type=int,
-                        default=multiprocessing.cpu_count,
-                        help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU, use with CAUTION!!!")
+                        default=multiprocessing.cpu_count(),
+                        help="Specify number of process to use, default value is CPU Count * 4. It's more limiting to RAM than CPU, use with CAUTION!!!")
     args = parser.parse_args()
 
     target = []
