@@ -136,9 +136,13 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--list",
+    parser.add_argument("--infile",
                         metavar="PATH",
                         help="txt file containing targets to bruteforce")
+    parser.add_argument("--outfile",
+                        metavar="PATH",
+                        default="temp.txt",
+                        help="txt file to write if not all target is tried")
     parser.add_argument("--target",
                         metavar="TARGET",
                         type=int,
@@ -193,5 +197,5 @@ if __name__ == '__main__':
     finally:
         if not len(done) == len(target):
             print('Program terminated prematurely. Writing remaining target to temp.txt')
-            with open('temp.txt', 'w') as outfile:
+            with open(args.outfile, 'w') as outfile:
                 outfile.write(' '.join([str(t) for t in target if t not in done]))
