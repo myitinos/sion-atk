@@ -139,7 +139,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--retry",
                         metavar="N",
-                        nargs=1,
                         default=4,
                         type=int,
                         help="number of max retry if exception occured, default is 4")
@@ -164,7 +163,7 @@ if __name__ == '__main__':
                         metavar="N",
                         type=int,
                         default=multiprocessing.cpu_count(),
-                        help="Specify number of process to use, default value is CPU Count * 4. It's more limiting to RAM than CPU, use with CAUTION!!!")
+                        help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU, use with CAUTION!!!")
     args = parser.parse_args()
 
     target = []
