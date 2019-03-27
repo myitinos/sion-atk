@@ -159,9 +159,9 @@ if __name__ == '__main__':
     if args.list:
         try:
             with open(args.list, 'r') as filetarget:
-                target += filetarget.read().split()
+                target += filetarget.read().split(' ')
         except:
-            print("")
+            print("List file is not reachable")
     if args.target:
         target += args.target
     if args.range:
