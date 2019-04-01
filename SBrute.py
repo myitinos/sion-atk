@@ -40,7 +40,7 @@ def init_logging():
     rootLogger.setLevel(logging.INFO)
 
 
-def init_dictionary(start_year=97, end_year=99):
+def init_dictionary(start_year=92, end_year=99):
     global DICTIONARY
 
     start_time = time.time()
@@ -58,7 +58,7 @@ def init_dictionary(start_year=97, end_year=99):
                 DICTIONARY.append(str(yy).zfill(2)[-2:]
                                   + str(mm).zfill(2)
                                   + str(dd).zfill(2))
-    for n in range(1, 1000):
+    for n in range(0, 1000):
         t = str(n)
         DICTIONARY.append(t * int(6 / len(t)))
 
@@ -89,7 +89,7 @@ def login(pin, depth=0):
             if r == OK_TXT:
                 SHARED.found = True
                 return pin
-        except requests.ConnectTimeout:
+        except (requests.ConnectTimeout or requests.ConnectionError):
             if depth < MAX_RETRY:
                 depth += 1
                 return login(pin, depth=depth)
