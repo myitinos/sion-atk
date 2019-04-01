@@ -29,7 +29,7 @@ def init_logging():
 
     rootLogger = logging.getLogger()
 
-    fileHandler = logging.FileHandler("log.txt")
+    fileHandler = logging.FileHandler("log.txt", mode='w')
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
 
