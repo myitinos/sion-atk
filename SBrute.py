@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.6.7
 
 import multiprocessing
 import gc
