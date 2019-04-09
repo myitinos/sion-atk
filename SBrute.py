@@ -92,7 +92,7 @@ def login(pin, depth=0):
             if r == OK_TXT:
                 SHARED.found = True
                 return pin
-        except (requests.ConnectTimeout or requests.ConnectionError):
+        except (requests.ConnectTimeout, requests.ConnectionError):
             logging.warning('Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
