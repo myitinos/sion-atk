@@ -8,14 +8,14 @@ import logging          # logging
 import os               # os.remove
 
 
-def init_logging():
+def init_logging(logFileName):
     logFormatter = logging.Formatter(
         fmt="[%(asctime)s][%(levelname)s] %(message)s",
         datefmt='%d-%b-%y %H:%M:%S')
 
     rootLogger = logging.getLogger()
 
-    fileHandler = logging.FileHandler("log.txt", mode='a')
+    fileHandler = logging.FileHandler(logFileName, mode='a')
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
 
@@ -146,7 +146,11 @@ def parse_argument():
     parser.add_argument("--outfile",
                         metavar="PATH",
                         default="temp.txt",
-                        help="txt file to write if not all target is tried default is temp.txt")
+                        help="txt file to write if not all target is tried, default is temp.txt")
+    parser.add_argument("--logfile",
+                        metavar="PATH",
+                        default="log.txt",
+                        help="log file destination")
     parser.add_argument("--target",
                         metavar="TARGET",
                         type=int,
@@ -166,8 +170,8 @@ def parse_argument():
 
 
 def main():
-    init_logging()
     args = parse_argument()
+    init_logging(args.logfile)
 
     # parse and gather all target
     target = []
