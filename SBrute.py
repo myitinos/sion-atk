@@ -1,10 +1,11 @@
 #!/usr/bin/env python3.6.7
 
 import multiprocessing  # Pool, Manager
-import gc               # GC Collect
-import time             # time logging
-import requests         # login request
+import gc               # gc.collect
+import time             # time.time
+import requests         # request.post
 import logging          # logging
+import os               # os.remove
 
 
 def init_global_argument(args):
@@ -113,7 +114,8 @@ def brute(nim):
 
     # check saved pin first
     try:
-        with open('found/{}'.format(nim), 'r') as f:
+        filename = 'found/{}'.format(nim)
+        with open(filename, 'r') as f:
             pin = f.read()
             logging.info('Saved pin found for {}, trying it.'.format(nim))
     except FileNotFoundError:
@@ -125,6 +127,7 @@ def brute(nim):
             return
         else:
             logging.warning('Saved pin is bad, trying normal method.')
+            os.remove(filename)
 
     DICTIONARY = init_dictionary(nim)
     with multiprocessing.Pool(PROCESS_COUNT) as pool:
