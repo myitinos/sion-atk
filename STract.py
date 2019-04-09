@@ -50,7 +50,7 @@ def main():
     data.remove(0)
     with open(args.outfile[0], 'w') as outfile:
         data = list(map(str, data))
-        outfile.write(' '.join(data))
+        outfile.write('\n'.join(data))
 
     total_time = time.time() - start_time
 

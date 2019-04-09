@@ -175,7 +175,7 @@ def main():
     if args.infile:
         try:
             with open(args.infile, 'r') as filetarget:
-                target += filetarget.read().split(' ')
+                target += filetarget.read().split('\n')
         except FileNotFoundError:
             logging.warning('Input file not found.')
     if args.target:
@@ -203,7 +203,7 @@ def main():
             logging.info(
                 'Program terminated prematurely. Writing remaining target to temp.txt')
             with open(args.outfile, 'w') as outfile:
-                outfile.write(' '.join([str(t)
+                outfile.write('\n'.join([str(t)
                                         for t in target if t not in done]))
 
 
