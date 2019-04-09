@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6.7
+#!/usr/bin/env python3.6.7
 
 import multiprocessing
 import gc
@@ -72,7 +72,7 @@ def init_dictionary(nim="160000000"):
     DICTIONARY = list(set(DICTIONARY))
     total_time = time.time()-start_time
 
-    logging.info("Dictionary generated {} values in {}s for {}"
+    logging.info("Dictionary generated {} values in {:0.2f}s for {}"
           .format(len(DICTIONARY), total_time, nim))
     return DICTIONARY
 
@@ -137,7 +137,7 @@ def brute(nim):
     if len(result) == 1:
         with open('found/{}'.format(nim), 'w') as logfile:
             logfile.write(result[0])
-            logging.info('Found %s %d' % (NIM, pin))
+            logging.info('Found %s %s' % (NIM, result[0]))
     else:
         logging.info('Failed %s' % (NIM))
     logging.info("Finished %s in %.2fs" % (NIM, total_time))
