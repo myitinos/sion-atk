@@ -72,8 +72,8 @@ def init_dictionary(nim="160000000"):
     DICTIONARY = list(set(DICTIONARY))
     total_time = time.time()-start_time
 
-    logging.info("Dictionary generated {} values in {:0.2f}s for {}"
-                 .format(len(DICTIONARY), total_time, nim))
+    logging.debug("Dictionary generated {} values in {:0.2f}s for {}"
+                  .format(len(DICTIONARY), total_time, nim))
     return DICTIONARY
 
 
