@@ -1,11 +1,10 @@
 #!/usr/bin/env python3.6.7
 
-import multiprocessing
-import gc
-import time
-import requests
-import sys
-import logging
+import multiprocessing  # Pool, Manager
+import gc               # GC Collect
+import time             # time logging
+import requests         # login request
+import logging          # logging
 
 
 def init_global_argument(args):
@@ -73,7 +72,7 @@ def init_dictionary(nim="160000000"):
     total_time = time.time()-start_time
 
     logging.info("Dictionary generated {} values in {:0.2f}s for {}"
-          .format(len(DICTIONARY), total_time, nim))
+                 .format(len(DICTIONARY), total_time, nim))
     return DICTIONARY
 
 
@@ -93,7 +92,8 @@ def login(pin, depth=0):
                 SHARED.found = True
                 return pin
         except (requests.ConnectTimeout, requests.ConnectionError):
-            logging.warning('Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
+            logging.warning(
+                'Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
                 return login(pin, depth=depth)
