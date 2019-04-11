@@ -10,7 +10,7 @@ def main():
 
     URL1 = "http://sion.stikom-bali.ac.id/load_login.php"
     URL2 = "http://sion.stikom-bali.ac.id/reg/mhsscrdet.php"
-    OK_TXT = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><div id="divTarget">Success </div><script language="javascript">window.location ='/reg/'</script>"""
+    OK_TXT = "Selamat datang"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("nim", help="NIM to try login")
@@ -21,7 +21,7 @@ def main():
     print("Trying to login...")
     s = requests.Session()
     r = s.post(URL1, data={"usern": args.nim, "passw": args.pin})
-    if not r.text == OK_TXT:
+    if not OK_TXT in r.text:
         print("Wrong NIM / PIN please try again")
         exit(1)
     else:
