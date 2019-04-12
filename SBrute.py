@@ -85,9 +85,9 @@ def login(nim, pin, found, counter, depth=0):
             if OK_TXT in r:
                 found.value = True
                 return pin
-        except (requests.ConnectTimeout, requests.ConnectionError):
+        except (requests.ConnectTimeout, requests.ConnectionError) as ex:
             logging.warning(
-                'Connection Problem occured, {} of {} retries'.format(depth, MAX_RETRY))
+                '{} occured {} {}, {} of {} retries'.format(str(ex), nim, pin, depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
                 return login(nim, pin, found, counter, depth)
