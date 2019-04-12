@@ -27,6 +27,10 @@ def init_logging(logFileName):
 
 
 def init_dictionary(nim="160000000"):
+    """ generate dictionary customised for each nim.\n
+    dictionary generation took only < 0.01s so it is
+    better to customise for each nim, instead of
+    creating big dictionary at once """
     nim = str(nim)
     start_year = int(nim[:2]) + 81
     end_year = int(nim[:2]) + 83
@@ -209,7 +213,7 @@ def main():
                 'Program terminated prematurely. Writing remaining target to temp.txt')
             with open(args.outfile, 'w') as outfile:
                 outfile.write('\n'.join([str(t)
-                                        for t in target if t not in done]))
+                                         for t in target if t not in done]))
 
 
 if __name__ == '__main__':
