@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6.7
+#!/usr/bin/env python3.6
 
 import multiprocessing  # Pool, Manager
 import gc               # gc.collect
