@@ -10,17 +10,17 @@ def main():
 
     URL1 = "http://sion.stikom-bali.ac.id/load_login.php"
     URL2 = "http://sion.stikom-bali.ac.id/reg/mhsscrdet.php"
-    OK_TXT = "Selamat datang"
+    OK_TXT = """<script language="javascript">window.location ='/reg/'</script>"""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("nim", help="NIM to try login")
     parser.add_argument("pin", help="PIN to try login")
-    parser.add_argument("--outfile", nargs=1, metavar="FILE", default="temp.txt", help="outfile target")
+    parser.add_argument("--outfile", nargs=1, metavar="FILE", default=["temp.txt"], help="outfile target")
     args = parser.parse_args()
 
     print("Trying to login...")
     s = requests.Session()
-    r = s.post(URL1, data={"usern": args.nim, "passw": args.pin})
+    r = s.post(URL1, data={"uname": args.nim, "passwd": args.pin})
     if not OK_TXT in r.text:
         print("Wrong NIM / PIN please try again")
         exit(1)
