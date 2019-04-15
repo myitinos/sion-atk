@@ -1,36 +1,39 @@
 #!/usr/bin/env python3.6
 
-import argparse     # argparse
-import requests     # requests.Session
-import time         # time.time
-
-URL = "http://sion.stikom-bali.ac.id/load_login.php"
+from SLogin import SLogin
+from time import time as now
 
 
-def main():
+class SCheck(object):
+    def __init__(self, nim, pin):
+        self.conn0 = SLogin(nim, pin)
+        self.conn1 = SLogin(nim, pin[::-1])
+
+    def connect(self):
+        self.conn0.login()
+        self.conn1.login()
+        return self
+
+    def is_both_equal(self):
+        return self.conn0.text == self.conn1.text
+
+
+if __name__ == "__main__":
+    import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("nim", help="NIM to try login")
     parser.add_argument("pin", help="PIN to try login")
     args = parser.parse_args()
 
-    print('Sending requests...')
-    start_time = time.time()
-    with requests.Session() as session:
-        resp1 = session.post(URL, data={'uname': args.nim, 'passwd': args.pin})
-        resp1 = resp1.text
-        resp2 = session.post(URL, data={'uname': args.nim, 'passwd': args.pin[::-1]})
-        resp2 = resp2.text
-    print('Requests completed in %0.2f' % (time.time() - start_time))
-
-    if resp1 == resp2:
-        print('Got only one response, please check your NIM and PIN:')
-        print(resp1)
+    start_time = now()
+    checker = SCheck(args.nim, args.pin)
+    checker.connect()
+    if checker.is_both_equal():
+        print('Got same response, please check your NIM/PIN')
     else:
-        print('First Response:')
-        print(resp1)
-        print('Second Response:')
-        print(resp2)
-
-
-if __name__ == "__main__":
-    main()
+        print('Got two different result. Writing to conn0.txt and conn1.txt')
+        with open('conn0.txt', 'w') as outfile:
+            outfile.write(checker.conn0.text)
+        with open('conn1.txt', 'w') as outfile:
+            outfile.write(checker.conn1.text)
