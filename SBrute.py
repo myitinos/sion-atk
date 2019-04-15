@@ -44,22 +44,26 @@ def init_dictionary(nim="160000000"):
                     continue
                 if mm in [2, 4, 6, 9, 11] and dd > 30:
                     continue
-                dictionary.append(str(dd).zfill(2)
-                                  + str(mm).zfill(2)
-                                  + str(yy).zfill(2)[-2:])
-                dictionary.append(str(yy).zfill(2)[-2:]
-                                  + str(mm).zfill(2)
-                                  + str(dd).zfill(2))
-    for n in range(0, 1000):
+                date = {
+                    'dd': str(dd).zfill(2),
+                    'mm': str(mm).zfill(2),
+                    'yy': str(yy)[-2:]
+                }
+                dictionary.append("{dd}{mm}{yy}".format(**date))
+                dictionary.append("{yy}{mm}{dd}".format(**date))
+    for n in range(1000):
         t = str(n)
         dictionary.append(t * int(6 / len(t)))
+    for i in range(10):
+        dictionary.append(str(i).zfill(2)*3)
+        dictionary.append(str(i).zfill(3)*2)
 
     # put extra values here
     dictionary += [
         "123456",
         "654321",
     ]
-    dictionary = list(set(dictionary))
+    dictionary = sorted(list(set(dictionary)))
     total_time = time.time()-start_time
 
     logging.debug("Dictionary generated {} values in {:0.2f}s for {}"
