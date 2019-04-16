@@ -9,8 +9,14 @@ class SLoginInvalidSession(Exception):
 
 class SLogin(object):
     # url = "http://sion.stikom-bali.ac.id/load_login.php"
-    url = "http://180.250.7.188/load_login.php"
+    url = "http://180.250.7.188"
+
+    urlLogin = "/load_login.php"
     target = """<script language="javascript">window.location ='/reg/'</script>"""
+
+    headers = {
+        'User-Agent': """Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"""
+    }
 
     def __init__(self, nim, pin):
         self.data = {
@@ -29,7 +35,10 @@ class SLogin(object):
             raise SLoginInvalidSession("Invalid session provided")
 
     def __connect(self):
-        response = self.session.post(self.url, self.data)
+        self.session.get(self.url)
+        response = self.session.post(self.url + self.urlLogin,
+                                     data=self.data,
+                                     headers=self.headers)
         self.text = response.text
         self.success = self.target in self.text
 
