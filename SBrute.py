@@ -135,10 +135,10 @@ def brute(nim, process_count):
     if len(result) == 1:
         with open('found/{}'.format(nim), 'w') as logfile:
             logfile.write(result[0])
-            logging.info('Found %s %s' % (nim, result[0]))
+            logmsg = 'FOUND {} {}'.format(nim, result[0])
     else:
-        logging.info('Failed %s' % (nim))
-    logging.info("Finished %s in %.2fs" % (nim, total_time))
+        logmsg = 'FAILED {}' .format(nim)
+    logging.info('{} in {:.2f}s'.format(logmsg, total_time))
 
 
 def parse_argument():
