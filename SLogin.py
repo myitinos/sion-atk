@@ -11,37 +11,40 @@ class SLogin(object):
     # url = "http://sion.stikom-bali.ac.id/load_login.php"
     url = "http://180.250.7.188/"
     urlLogin = "load_login.php"
-    target = """<script language="javascript">window.location ='/reg/'</script>"""
+    target = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><script language="javascript">window.location ='/reg/'</script>"""
 
     user_agent = """Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"""
-    
-    def __init__(self, nim, pin):
+
+    def __init__(self, nim, pin, session=None):
         self.data = {
             'uname': nim,
             'passwd': pin
         }
+        self.session = session
 
-    def login(self, session=None):
-        if session is None:
-            with Session() as self.session:
-                self.__connect()
-        elif type(session) is Session:
-            self.session = session
-            self.__connect()
+    def __enter__(self):
+        if self.session is not Session:
+            self.session = Session()
+        return self
+
+    def __exit__(self, *kwargs):
+        self.session.close()
+
+    def login(self):
+        if type(self.session) is not Session:
+            raise Exception("Invalid session")
         else:
-            raise SLoginInvalidSession("Invalid session provided")
-
-    def __connect(self):
-        self.session.get(self.url)
-        headers = {
-            'User-Agent': self.user_agent,
-            'Referer': self.url
-        }
-        response = self.session.post(self.url + self.urlLogin,
-                                     data=self.data,
-                                     headers=headers)
-        self.text = response.text
-        self.success = self.target in self.text
+            self.session.get(self.url)
+            headers = {
+                'User-Agent': self.user_agent,
+                'Referer': self.url
+            }
+            response = self.session.post(self.url + self.urlLogin,
+                                         data=self.data,
+                                         headers=headers)
+            self.text = response.text
+            self.success = self.target in self.text
+            return self.success
 
 
 if __name__ == "__main__":
@@ -50,6 +53,9 @@ if __name__ == "__main__":
     parser.add_argument("pin", help="PIN to try login")
     args = parser.parse_args()
 
-    conn = SLogin(args.nim, args.pin)
-    conn.login()
-    print(conn.text)
+    with SLogin(args.nim, args.pin) as conn:
+        if conn.login():
+            print('Login success')
+        else:
+            print('Login failed')
+        print(conn.text)
