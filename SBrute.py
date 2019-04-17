@@ -87,11 +87,14 @@ def login(nim, pin, found, counter, depth=0):
                     found.value = True
                     return pin
         except (requests.ConnectTimeout, requests.ConnectionError, requests.ConnectTimeout) as ex:
-            logging.warning(
+            logging.debug(
                 '{} occured {} {}, {} of {} retries'.format(str(ex), nim, pin, depth, MAX_RETRY))
             if depth < MAX_RETRY:
                 depth += 1
                 return login(nim, pin, found, counter, depth)
+            else:
+                logging.critical('Max Retry Exceeded for this exception: {}'.format(str(ex)))
+                raise ex
         finally:
             counter.value = (
                 counter.value + 1) if depth == 0 else counter.value
