@@ -4,27 +4,8 @@ from requests import Session
 from SLogin import SLogin
 
 
-class STractNotLoggedIn(Exception):
-    pass
-
-
-class STract(object):
-    url = "http://180.250.7.188/reg/mhsscrdet.php"
-
-    def __init__(self, nim, pin):
-        self.connection = SLogin(nim, pin)
-        self.session = Session()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.session.close()
-
-    def connect(self):
-        self.connection.login(session=self.session)
-
-        return self.connection.success
+class STract(SLogin):
+    urlTract = "reg/mhsscrdet.php"
 
     def extract(self):
         txt0 = "<center><strong>[HASIL PENCARIAN DATA MAHASISWA]</strong></center><table><tr><th align='center'>NIM</th><th align='center'>NAMA</th><th align='center'>DETAIL</th></tr>"
@@ -35,8 +16,8 @@ class STract(object):
         txt5 = "' class='linkhitam'>Detail</a></td></tr>"
         txt6 = "</table>"
 
-        if self.connection.success:
-            data = self.session.post(self.url).text
+        if self.success:
+            data = self.session.get(self.url + self.urlTract).text
 
             data = data.replace(txt0, "")
             data = data.replace(txt1, "")
@@ -56,7 +37,7 @@ class STract(object):
 
             return data
         else:
-            raise STractNotLoggedIn("Please login first")
+            raise Exception("Please login first")
 
 
 if __name__ == "__main__":
@@ -76,8 +57,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with STract(args.nim, args.pin) as extraction:
-        print('Trying to connect with {} {}'.format(args.nim, args.pin))
-        if extraction.connect():
+        print('Trying to login with {} {}'.format(args.nim, args.pin))
+        if extraction.login():
             print('Login success, extracing data...')
             data = extraction.extract()
             print('Extraced {} data'.format(len(data)))
