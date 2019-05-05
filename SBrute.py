@@ -12,7 +12,7 @@ from SLogin import SLogin
 from SDict import SDict
 
 
-def init_logging(logFileName):
+def init_logging(logFileName, debug=False):
     logFormatter = logging.Formatter(
         fmt="[%(asctime)s][%(levelname)s] %(message)s",
         datefmt='%d-%b-%y %H:%M:%S')
@@ -27,7 +27,7 @@ def init_logging(logFileName):
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
 
-    rootLogger.setLevel(logging.INFO)
+    rootLogger.setLevel(logging.DEBUG if debug else logging.INFO)
 
 
 def login(nim, pin, found, counter, depth=0):
@@ -37,6 +37,7 @@ def login(nim, pin, found, counter, depth=0):
     """
     MAX_RETRY = 64   # please edit this if you need more retry
 
+    logging.debug("Try: nim={} pin={} depth={}".format(nim, pin, depth))
     if not found.value:
         try:
             with SLogin(nim, pin) as connection:
@@ -107,6 +108,10 @@ def parse_argument():
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--debug",
+                        action="store_true",
+                        default=False,
+                        help="activate debug logging")
     parser.add_argument("--retry",
                         metavar="N",
                         default=4,
@@ -143,7 +148,7 @@ def parse_argument():
 
 def main():
     args = parse_argument()
-    init_logging(args.logfile)
+    init_logging(args.logfile, args.debug)
 
     # parse and gather all target
     target = []
