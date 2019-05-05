@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 def SDict(nim="160000000"):
     """ generate dictionary customised for each nim.\n
     dictionary generation took only < 0.01s so it is
