@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import re
+
 from requests import Session
+from fake_useragent import UserAgent
 
 
 class SLogin(object):
@@ -9,8 +11,6 @@ class SLogin(object):
     url = "http://180.250.7.188/"
     urlLogin = "load_login.php"
     target = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><script language="javascript">window.location ='/reg/'</script>"""
-
-    user_agent = """Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"""
 
     regex = re.compile("[a-f0-9]{32}")
 
@@ -20,6 +20,7 @@ class SLogin(object):
             'passwd': pin
         }
         self.session = session
+        self.user_agent = UserAgent().random
 
     def __enter__(self):
         if type(self.session) is not Session:
