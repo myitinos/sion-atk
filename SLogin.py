@@ -4,10 +4,6 @@ import re
 from requests import Session
 
 
-class SLoginInvalidSession(Exception):
-    pass
-
-
 class SLogin(object):
     # url = "http://sion.stikom-bali.ac.id/load_login.php"
     url = "http://180.250.7.188/"
