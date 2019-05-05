@@ -107,7 +107,7 @@ def parse_argument():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--retry",
+    parser.add_argument("--retry",
                         metavar="N",
                         default=4,
                         type=int,
@@ -128,7 +128,7 @@ def parse_argument():
                         type=int,
                         help="target NIM to bruteforce",
                         nargs="+")
-    parser.add_argument("-r", "--range",
+    parser.add_argument("--range",
                         metavar=("START", "END"),
                         type=int,
                         nargs=2,
