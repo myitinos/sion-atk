@@ -107,37 +107,37 @@ def parse_argument():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--retry",
+    parser.add_argument("-r", "--retry",
                         metavar="N",
                         default=4,
                         type=int,
                         help="number of max retry if exception occured, default is 4")
-    parser.add_argument("--infile",
+    parser.add_argument("-i", "--infile",
                         metavar="PATH",
                         help="txt file containing targets to bruteforce")
-    parser.add_argument("--outfile",
+    parser.add_argument("-o", "--outfile",
                         metavar="PATH",
                         default="temp.txt",
                         help="txt file to write if not all target is tried, default is temp.txt")
-    parser.add_argument("--logfile",
+    parser.add_argument("-l", "--logfile",
                         metavar="PATH",
                         default="log.txt",
                         help="log file destination")
-    parser.add_argument("--target",
+    parser.add_argument("-t", "--target",
                         metavar="TARGET",
                         type=int,
                         help="target NIM to bruteforce",
                         nargs="+")
-    parser.add_argument("--range",
+    parser.add_argument("-r", "--range",
                         metavar=("START", "END"),
                         type=int,
                         nargs=2,
                         help="range of target NIM to bruteforce, END is included in the range")
-    parser.add_argument('-p', '--process',
+    parser.add_argument("-p", "--process",
                         metavar="N",
                         type=int,
                         default=multiprocessing.cpu_count(),
-                        help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU, use with CAUTION!!!")
+                        help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU.")
     return parser.parse_args()
 
 
