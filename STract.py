@@ -1,41 +1,33 @@
 #!/usr/bin/python3
+import re
 
 from requests import Session
 from SLogin import SLogin
 
 
 class STract(SLogin):
-    urlTract = "reg/mhsscrdet.php"
+    urlTract = "reg/mhsscrdet.php?tipe=nim&txt={}"
+    extracted = []
 
     def extract(self):
-        txt0 = "<center><strong>[HASIL PENCARIAN DATA MAHASISWA]</strong></center><table><tr><th align='center'>NIM</th><th align='center'>NAMA</th><th align='center'>DETAIL</th></tr>"
-        txt1 = "<tr class='labelhitam' bgcolor=#CCCCCC><td width='120' align='center'>"
-        txt2 = "<tr class='labelhitam' bgcolor=#FFFFFF><td width='120' align='center'>"
-        txt3 = "</td><td width='450'>"
-        txt4 = "</td><td><a href='mhsdet.php?nim="
-        txt5 = "' class='linkhitam'>Detail</a></td></tr>"
-        txt6 = "</table>"
-
+        # check if logged in
         if self.success:
-            data = self.session.get(self.url + self.urlTract).text
+            # just a little future proofing
+            for i in range(0, 10):
+                raw = self.session.get(self.url + self.urlTract.format(i)).text
 
-            data = data.replace(txt0, "")
-            data = data.replace(txt1, "")
-            data = data.replace(txt2, "")
-            data = data.replace(txt3, "\n")
-            data = data.replace(txt4, "\n")
-            data = data.replace(txt5, "\n")
-            data = data.replace(txt6, "")
+                if 'HASIL PENCARIAN DATA MAHASISWA' in raw:
+                    # use regex to find all nim
+                    raw = re.findall("([0-9]{9})", raw)
+                    # remove duplicate values using set
+                    raw = list(set(raw))
+                    # sort all the values
+                    raw = sorted(raw)
 
-            data = data.split("\n")[:-1]
-            data = [int(t) if n % 3 == 0 else 0 for (n, t)
-                    in enumerate(data)]
-            data = sorted(list(set(data)))
-            data.remove(0)
+                    # append to all extracted data
+                    self.extracted += raw
 
-            data = list(map(str, data))
-
-            return data
+            return self.extracted
         else:
             raise Exception("Please login first")
 
