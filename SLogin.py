@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import re
 
@@ -7,7 +8,6 @@ from fake_useragent import UserAgent
 
 
 class SLogin(object):
-    # url = "http://sion.stikom-bali.ac.id/load_login.php"
     url = "http://180.250.7.188/"
     urlLogin = "load_login.php"
     target = """<script language="JavaScript1.2">document.getElementById('usern').style.backgroundColor='#F3F3F3';document.getElementById('passw').style.backgroundColor='#F3F3F3'</script><script language="javascript">window.location ='/reg/'</script>"""
