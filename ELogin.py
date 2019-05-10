@@ -3,7 +3,7 @@
 import argparse
 
 from requests import Session
-from fake_useragent import UserAgent
+from SAgent import SAgent
 from bs4 import BeautifulSoup
 
 
@@ -19,7 +19,7 @@ class ELogin(object):
             'ctl00$btnLogin': 'Login',
         }
         self.session = session
-        self.user_agent = UserAgent().random
+        self.user_agent = next(SAgent)
 
     def __enter__(self):
         if type(self.session) is not Session:
