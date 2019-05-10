@@ -95,7 +95,6 @@ class SBrute(object):
 
             if self.found and self.result is not None:
                 with open('found/{}'.format(self.nim), 'w') as logfile:
-                    logging.info(str(self.result))
                     logfile.write(self.result[0])
                 logmsg = 'FOUND {} {}'.format(self.nim, self.result[0])
             else:
