@@ -4,7 +4,7 @@ import argparse
 import re
 
 from requests import Session
-from fake_useragent import UserAgent
+from SAgent import SAgent
 
 
 class SLogin(object):
@@ -20,7 +20,7 @@ class SLogin(object):
             'passwd': pin
         }
         self.session = session
-        self.user_agent = UserAgent().random
+        self.user_agent = next(SAgent)
 
     def __enter__(self):
         if type(self.session) is not Session:
