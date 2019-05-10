@@ -1,5 +1,3 @@
-from fake_useragent import UserAgent
-from time import time as now
 from random import shuffle
 
 AGENTS = [
@@ -268,6 +266,7 @@ SAgent = SAGenerator()
 
 
 if __name__ == "__main__":
+    from time import time as now
     import argparse
 
     parser = argparse.ArgumentParser()
