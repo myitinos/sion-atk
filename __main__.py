@@ -34,7 +34,7 @@ def parse_argument():
                         action="store_true",
                         default=False,
                         help="disable progress bar")
-    parser.add_argument("--disable-progressbar",
+    parser.add_argument("--disable-progress-bar",
                         action="store_true",
                         default=False,
                         help="disable progress bar")
@@ -68,11 +68,6 @@ def parse_argument():
                         type=int,
                         nargs=2,
                         help="range of target NIM to bruteforce, END is included in the range")
-    parser.add_argument("-P", "--process",
-                        metavar="N",
-                        type=int,
-                        default=cpu_count(),
-                        help="Specify number of process to use, default value is CPU Count.")
     parser.add_argument("-T", "--thread",
                         metavar="N",
                         type=int,
@@ -103,17 +98,18 @@ if __name__ == '__main__':
         logging.critical('Target is empty!')
         exit(1)
 
-    logging.info("Starting bruteforce with {} process(es) for {} target(s)".format(
-        args.process, len(target)))
+    logging.info(
+        "Starting bruteforce with {} thread(s) for {} target(s)".format(
+            args.thread, len(target)))
 
     try:
         bar = None
         for t in target:
             s = SBrute(nim=t,
                        thread=args.thread,
-                       disableProgressBar=args.disable_progressbar,
-                       start=False)
-            done.append(s.start())
+                       disableProgressBar=args.disable_progress_bar,
+                       start=True)
+            done.append(t)
 
         # with Pool(args.process) as pool:
         #     pool.starmap(SBrute, [(t, args.thread, True, positionQueue)
@@ -133,5 +129,5 @@ if __name__ == '__main__':
             logging.info(
                 'Program terminated prematurely. Writing remaining target to temp.txt')
             with open(args.outfile, 'w') as outfile:
-                outfile.write('\n'.join([str(t)
-                                         for t in target if t not in done]))
+                outfile.write(
+                    '\n'.join([str(t) for t in target if t not in done]))
