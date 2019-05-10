@@ -17,19 +17,18 @@ class SBrute(object):
                  nim: str,
                  thread: int = 16,
                  disableProgressBar: bool = False,
+                 positionProgressBar: int = 0,
                  start: bool = False):
 
         self.nim = nim
         self.thread = thread
         self.dictionary = SDict(nim)
-        self.session = requests.Session()
-        self.session.mount(
-            'http://', requests.adapters.HTTPAdapter(pool_maxsize=self.thread*2))
 
         self.progressBar = None
         if not disableProgressBar:
             self.progressBar = tqdm(desc=self.nim,
-                                    total=len(self.dictionary))
+                                    total=len(self.dictionary),
+                                    position=positionProgressBar)
 
         self.found = False
         self.result = []
