@@ -4,12 +4,10 @@ import argparse
 
 from requests import Session
 from SAgent import SAgent
-from bs4 import BeautifulSoup
 
 
 class ELogin(object):
     url = "http://elearning.stikom-bali.ac.id"
-    # target = "MAHASISWA || E-LEARNING STIKOM BALI"
 
     def __init__(self, nim, pin, session=None):
         self.data = {
@@ -33,13 +31,6 @@ class ELogin(object):
         if type(self.session) is not Session:
             raise Exception("Invalid session")
         else:
-            # index = self.session.get(self.url)
-            # soup = BeautifulSoup(index.text, 'html.parser')
-            # self.data.update({'__VIEWSTATE': soup.find(
-            #     "input", id="__VIEWSTATE")['value']})
-            # self.data.update({'__VIEWSTATEGENERATOR': soup.find(
-            #     "input", id="__VIEWSTATEGENERATOR")['value']})
-
             response = self.session.post(self.url,
                                          data=self.data,
                                          allow_redirects=False)
