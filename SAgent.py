@@ -263,28 +263,3 @@ def SAGenerator():
 
 
 SAgent = SAGenerator()
-
-
-if __name__ == "__main__":
-    from time import time as now
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("count",
-                        type=int,
-                        metavar="N",
-                        help="number of repetition")
-    args = parser.parse_args()
-
-    tStart = now()
-    ua = SAgent
-    agents = []
-    for _ in range(args.count):
-        agents.append(next(ua))
-    agents = list(set(agents))
-    agents.sort()
-    tEnd = now()
-
-    print("Generated {} unique values in {:02f}".format(len(agents), tEnd-tStart))
-    with open('ua.txt', 'w') as f:
-        f.write('\',\n\''.join(agents))
