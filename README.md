@@ -3,8 +3,7 @@ Sebuah kumpulan skrip yang dibuat dengan tujuan bruteforce nim dan password maha
 
 Ketika pertama kali dipergunakan author berhasil mendapatkan nim dan password yang terdapat di folder found, namun setelah tanggal 10 Juni 2019 setiap mahasiswa diwajibkan untuk mengganti password diantara 8-12 karakter, sehingga skrip ini sudah tidak bisa dipergunakan.
 
-## Table of Contents
-- [Table of Contents](#Table-of-Contents)
+## Table of  <!-- omit in toc -->
 - [SAgent](#SAgent)
 - [SDict](#SDict)
 - [STract](#STract)
@@ -12,6 +11,8 @@ Ketika pertama kali dipergunakan author berhasil mendapatkan nim dan password ya
 - [ELogin](#ELogin)
 - [SBrute](#SBrute)
   - [example](#example)
+
+
 ## SAgent
 Modul untuk generator untuk menghasilkan user-agent dari berbagai sumber browser, dependency dari modul Login
 ## SDict
