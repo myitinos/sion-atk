@@ -5,7 +5,6 @@ import requests
 import time
 import os
 
-from multiprocessing.dummy import Pool, Queue, Lock
 from SDict import SDict
 # from SLogin import SLogin
 from ELogin import ELogin
@@ -85,8 +84,17 @@ class SBrute(object):
                     logging.warning('Saved pin is bad, trying normal method.')
                     os.remove(filename)
 
-            with Pool(self.thread) as pool:
-                self.result += pool.map(self.login, self.dictionary)
+            try:
+                from multiprocessing import Pool
+
+                with Pool(self.thread) as pool:
+                    self.result += pool.map(self.login, self.dictionary)
+
+            except ImportError:
+                from multiprocessing.dummy import Pool
+
+                with Pool(self.thread) as pool:
+                    self.result += pool.map(self.login, self.dictionary)
 
             self.result = list(set(self.result))
             self.result.remove(None)
